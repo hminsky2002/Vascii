@@ -1,6 +1,6 @@
 import cv2
 import os
-
+import time
 ########################################################################
 # SETTINGS #
 SHOW_REAL_VIDEO = False   # Set this to True to get real camera video from cv2
@@ -22,7 +22,7 @@ def convert_to_ascii(input_grays):
 def print_array(input_ascii_array):
     os.system("clear")
     print('\n'.join((''.join(row) for row in input_ascii_array)), end='')
-
+    time.sleep(5)
 
 cap = cv2.VideoCapture("rtsp://192.168.86.46:8554/live.sdp")
 
