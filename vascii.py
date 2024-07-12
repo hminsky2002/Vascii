@@ -13,10 +13,10 @@ contrast = 1
 invert = 1
 mode = 0
 server_ip = "127.0.0.1"
-cols = os.get_terminal_size().columns
+cols = 80  # Fixed to 80 columns
 rows = os.get_terminal_size().lines
 paddingSize = 10
-remoteCols = 100
+remoteCols = 80  # Fixed to 80 columns
 remoteRows = 70
 bufferSize = 102400
 send_sock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
@@ -56,32 +56,26 @@ def main():
         # Adjust remote stream scale
         adjustScale()
     
-    # Processing loop
     while True:
         # Capture a frame from the webcam
         ret, frame = cap.read()
         frame = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-        width = len(frame[0])*2
+        width = len(frame[0]) * 2
         height = len(frame)
 
-        if mode == 1:
-            if (width > remoteCols) or (height > remoteRows):
-                scale-=0.001
-            elif ((width < remoteCols) or (height < remoteRows)) and not ((width == remoteCols) or (height == remoteRows)):
-                scale+=0.001
-        else:
-            if (width > cols) or (height > rows):
-                scale-=0.001
-            elif ((width < cols) or (height < rows)) and not ((width == cols) or (height == rows)):
-                scale+=0.001
+        # Adjust scale to fit fixed columns
+        if (width > cols) or (height > rows):
+            scale -= 0.001
+        elif ((width < cols) or (height < rows)) and not ((width == cols) or (height == rows)):
+            scale += 0.001
 
         # Convert frame to greyscale
         gscale = []
         for b, i in enumerate(frame):
             for a, x in enumerate(i):
-                sum = int(x[0])+int(x[1])+int(x[2])
-                sum/=3
-                sum*=contrast
+                sum = int(x[0]) + int(x[1]) + int(x[2])
+                sum /= 3
+                sum *= contrast
                 sum = int(sum)
                 x = [sum, sum, sum]
                 i[a] = x
@@ -98,7 +92,7 @@ def main():
             if cols != os.get_terminal_size().columns:
                 cols = os.get_terminal_size().columns
                 rows = os.get_terminal_size().lines
-        time.sleep(0.25)
+        time.sleep(4)  # Adjust sleep for about 4 seconds delay
 
     # Release the webcam
     cap.release()
@@ -111,23 +105,29 @@ def img2ascii(pixels, width):
     if invert == 1:
         chars.reverse()
     # Assigning a char to each pixel
-    new_pixels = [chars[pixel//25] for pixel in pixels]
+    new_pixels = [chars[pixel // 25] for pixel in pixels]
     new_pixels = ''.join(new_pixels)
     # Padding to move the frame to the center of the terminal
     if mode == 0:
-        paddingSize = int(((cols-width)/2))
+        paddingSize = int(((cols - width) / 2))
     else:
-        paddingSize = int(((remoteCols-width+10)/2))
+        paddingSize = int(((remoteCols - width + 10) / 2))
     padding = " " * paddingSize
     new_pixels_count = len(new_pixels)
     # Construct the final frame string
-    ascii_image = [padding+new_pixels[index:index + width] for index in range(0, new_pixels_count, width)]
+    ascii_image = [padding + new_pixels[index:index + width] for index in range(0, new_pixels_count, width)]
     ascii_image = "\n".join(ascii_image)
-    # Display or send
-    if mode == 1:
-        sendFrame("\r"+ascii_image)
+    # Only clear screen and redraw if the width of the image reaches the screen width
+    if width >= cols:
+        if mode == 1:
+            sendFrame("\033[2J\033[H" + ascii_image)  # Clear screen and move cursor to home
+        else:
+            print("\033[2J\033[H" + ascii_image, end="")  # Clear screen and move cursor to home
     else:
-        print("\r"+ascii_image)
+        if mode == 1:
+            sendFrame(ascii_image)
+        else:
+            print(ascii_image, end="")
 
 # Send an ascii string image to server
 def sendFrame(frame):
