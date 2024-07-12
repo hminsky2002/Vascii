@@ -8,9 +8,9 @@
 import cv2, time, sys, os, socket, threading
 
 # Global variables and objects
-scale = 0.15
+scale = 0.05
 contrast = 1
-invert = 0
+invert = 1
 mode = 0
 server_ip = "127.0.0.1"
 cols = os.get_terminal_size().columns
@@ -40,7 +40,7 @@ def main():
         server_ip = str(input("Server IP: "))
 
     # Connect to webcam
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("rtsp://192.168.86.46:8554/live.sdp")
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
     
@@ -156,6 +156,7 @@ def recvStream(self):
             frame = arr[1]
             print(frame)
         else:
+            print("\033[2J\033[H", end="")
             print(data)
 
 if __name__ == "__main__":
