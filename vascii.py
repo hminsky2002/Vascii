@@ -8,7 +8,7 @@
 import cv2, time, sys, os, socket, threading
 
 # Global variables and objects
-scale = 0.15
+scale = 0.05
 contrast = 1
 invert = 0
 mode = 0
@@ -40,7 +40,7 @@ def main():
         server_ip = str(input("Server IP: "))
 
     # Connect to webcam
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("rtsp://192.168.86.46:8554/live.sdp")
     if not cap.isOpened():
         raise IOError("Cannot open webcam")
     
